@@ -6,7 +6,7 @@ name: 每日健康打卡
 on: 
   # 定时运行
   schedule:
-    - cron:  '0 20 * * *' # 打卡程序运行时间（UTC时间）
+    - cron:  '7 8 * * *' # 打卡程序运行时间（UTC时间）
 
   # 手动运行
   workflow_dispatch:
@@ -19,7 +19,9 @@ jobs:
     steps:
       - name: 安装 Chrome 浏览器
         shell: powershell
-        run: choco install -y google-chrome-x64
+        run: |
+          choco install -y google-chrome-x64
+          choco install -y golang
 
       - name: 下载打卡程序
         shell: powershell
