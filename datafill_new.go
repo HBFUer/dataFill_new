@@ -130,7 +130,7 @@ func getAuthAndDataFill() {
 	}
 
 	os.WriteFile("./Screenshots/oaLoginPage.png", pic0, 0o644)
-	// os.WriteFile("./Screenshots/oaLoginPageWithAccount.png", pic1, 0o644) // 调试使用，生产环境请注释本行，否则会导致 OA 学号详细泄露
+	// os.WriteFile("./Screenshots/oaLoginPageWithAccount.png", pic1, 0o644) // 调试使用，生产环境请注释本行，否则会导致 OA 学号信息泄露
 	os.WriteFile("./Screenshots/oaLogined.png", pic2, 0o644)
 
 }
