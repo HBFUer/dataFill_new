@@ -360,7 +360,7 @@ func createDir(path string) {
 		return
 	}
 	if _exist {
-		log.Println("截图目录已已经存在~")
+		log.Println("截图目录已经存在~")
 	} else {
 		err := os.Mkdir(path, os.ModePerm)
 		if err != nil {
