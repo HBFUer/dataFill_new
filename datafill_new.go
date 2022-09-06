@@ -1,5 +1,5 @@
 // 河北金融学院 OA 疫情数据自动填报（新版-适配微信小程序版本）
-// Powered By Luckykeeper <luckykeeper@luckykeeper.site | https://luckykeeper.site> 2022/09/04
+// Powered By Luckykeeper <luckykeeper@luckykeeper.site | https://luckykeeper.site> 2022/09/06
 package main
 
 import (
@@ -11,6 +11,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -26,9 +27,10 @@ var (
 	oaUsername string // OA 账号
 	oaPassword string // OA 密码
 	address    string // 详细地址
-	prove      bool   //核酸检测证明，有填 true ，没有填 false
+	prove      bool   // 核酸检测证明，有填 true ，没有填 false
+	addressGA  string // GitHub Action 用地址，URL编码
 
-	HaveProve, AuthorizationCodeStr string
+	addressGAToStr, HaveProve, AuthorizationCodeStr string
 )
 
 func init() {
@@ -36,27 +38,45 @@ func init() {
 	flag.StringVar(&oaPassword, "oaPassword", "", "河北金融学院OA系统的密码")
 	flag.StringVar(&address, "address", "", "当前的居住地址(省/市/区/街道/详细地址),省市参数可以在 https://oa.hbfu.edu.cn/datafill/collect/usertask 获取")
 	flag.BoolVar(&prove, "prove", false, "是否持有核酸证明,可选(true|false),true=>有,false=>无")
+	flag.StringVar(&addressGA, "addressGA", "", "当前的居住地址Url编码（仅供GitHub Action使用）")
 	flag.Parse()
+	addressGAToStr, _ = url.QueryUnescape(addressGA)
 }
 
 func main() {
-	fmt.Println("河北金融学院自动每日健康打卡（新版）")
+
+	fmt.Println("河北金融学院自动每日健康打卡（新版）Ver1.01 Build20220906")
 	fmt.Println("Powered By Luckykeeper <luckykeeper@luckykeeper.site | https://luckykeeper.site>")
 	fmt.Println("GitHub:https://github.com/HBFUer/dataFill_new")
 	fmt.Println("_____________________________________________")
-	if oaUsername == "" || oaPassword == "" || address == "" {
-		fmt.Println("Usage:")
-		fmt.Println("-oaUsername (必选参数)河北金融学院OA系统的用户名(学工号)")
-		fmt.Println("-oaPassword (必选参数)河北金融学院OA系统的密码")
-		fmt.Println("-address (必选参数)当前的居住地址(省/市/区/街道/详细地址),省市参数可以在 https://oa.hbfu.edu.cn/datafill/collect/usertask 获取")
-		fmt.Println("-prove (可选参数)是否持有核酸证明,可选(true|false),true=>有,false=>无。默认：无")
+	if oaUsername == "" || oaPassword == "" { // 校验：OA用户名密码必须填写
+		usage()
+	} else if addressGA == "" && address == "" { // 校验，两个地址不能都空
+		usage()
+	} else if addressGA != "" && address != "" { // 校验，两个地址不能都填
+		usage()
 	} else {
+		if addressGA != "" {
+			address = addressGAToStr
+		}
 		fmt.Println("本程序将自动完成每日健康打卡，你需要对你上报的数据负责！程序仅负责调用接口上报数据！")
 		fmt.Println("程序仅供学习探讨Go语言编程，对使用本程序造成的一切后果作者均不负责！")
+		fmt.Println("程序不存储用户账户密码，请妥善保管好相关信息！")
+		fmt.Println("程序不对接口变动后可能产生的异常负责，请关于接口信息！")
 		fmt.Println("运行程序则代表已知晓并同意以上规则！")
 		createDir("./Screenshots")
 		getAuthAndDataFill()
 	}
+}
+
+// Usage
+func usage() {
+	fmt.Println("Usage:")
+	fmt.Println("-oaUsername (必选参数)河北金融学院OA系统的用户名(学工号)")
+	fmt.Println("-oaPassword (必选参数)河北金融学院OA系统的密码")
+	fmt.Println("-address (必选参数，和 addressGA 必选其中一个)当前的居住地址(省/市/区/街道/详细地址),省市参数可以在 https://oa.hbfu.edu.cn/datafill/collect/usertask 获取")
+	fmt.Println("-addressGA (必选参数，和 address 必选其中一个)当前的居住地址Url编码（仅供GitHub Action使用）")
+	fmt.Println("-prove (可选参数)是否持有核酸证明,可选(true|false),true=>有,false=>无。默认：无")
 }
 
 // 获取 AuthorizationCode
