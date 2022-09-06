@@ -29,6 +29,8 @@
 
 > GitHub Action 是 GitHub （2018年被微软收购）提供的服务，可以利用微软的服务器运行自己的程序，GitHub 为每个个人用户提供了每月 3000 分钟的免费运行额度，在此感谢 GitHub 和微软！
 
+> 使用这种方式，你在设定好之后每日即可自动打卡，不需要自己准备设备，不需要人工干预！
+
 > 请在理解单文件运行方式的前提下使用 GitHub Action 
 
 1. 首先你需要拥有一个 GitHub 账号，如果没有，请点击[这里](https://github.com/)然后点击右上角的 `Sign up` 注册一个，可以看这篇教程：https://blog.csdn.net/KKKKKKKMAx/article/details/125394719
