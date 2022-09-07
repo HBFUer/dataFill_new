@@ -32,11 +32,11 @@ jobs:
 
       - name: 下载打卡程序
         run: |
-          wget -O datafill_new_linux_amd64 https://github.com/HBFUer/dataFill_new/releases/download/1.01/datafill_new_linux_amd64
-          chmod +x datafill_new_linux_amd64
+          wget -O ./datafill_new_linux_amd64 https://github.com/HBFUer/dataFill_new/releases/download/1.01/datafill_new_linux_amd64
+          chmod +x ./datafill_new_linux_amd64
 
       - name: 进行自动打卡
-        run: datafill_new_linux_amd64 -oaUsername=${{ secrets.oaUsername }} -oaPassword=${{ secrets.oaPassword }} -addressGA=${{ secrets.address }} -prove=${{ secrets.prove }}
+        run: ./datafill_new_linux_amd64 -oaUsername=${{ secrets.oaUsername }} -oaPassword=${{ secrets.oaPassword }} -addressGA=${{ secrets.address }} -prove=${{ secrets.prove }}
 
       - name: 上传运行截图
         uses: actions/upload-artifact@v3
