@@ -62,7 +62,7 @@ func main() {
 		fmt.Println("本程序将自动完成每日健康打卡，你需要对你上报的数据负责！程序仅负责调用接口上报数据！")
 		fmt.Println("程序仅供学习探讨Go语言编程，对使用本程序造成的一切后果作者均不负责！")
 		fmt.Println("程序不存储用户账户密码，请妥善保管好相关信息！")
-		fmt.Println("程序不对接口变动后可能产生的异常负责，请关于接口信息！")
+		fmt.Println("程序不对接口变动后可能产生的异常负责，请关注接口信息！")
 		fmt.Println("运行程序则代表已知晓并同意以上规则！")
 		createDir("./Screenshots")
 		getAuthAndDataFill()
