@@ -1,0 +1,46 @@
+# 河北金融学院 OA 疫情数据自动填报（新版-适配微信小程序版本） GitHub Action 版（Runner：Windows）
+# Powered By Luckykeeper <luckykeeper@luckykeeper.site | https://luckykeeper.site> 2022/09/07
+
+name: 每日健康打卡(UbuntuRunner)
+
+on: 
+  # 定时运行
+  schedule:
+    - cron:  '11 2 * * *' # 打卡程序运行时间（UTC时间），默认 '11 2 * * *' 即北京时间每天下午2点11分运行，建议设置在非整点避开高峰期避免排队时间过长问题
+
+  # 手动运行
+  workflow_dispatch:
+
+jobs:
+  dailyFill:
+    runs-on: ubuntu-20.04
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: 安装运行环境
+        run: |
+          echo "开始初始化环境"
+          sudo apt update
+          sudo apt upgrade -y
+          sudo apt install -y libappindicator1 fonts-liberation wget
+          echo "安装Chrome浏览器"
+          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo dpkg -i google-chrome*.deb
+          echo "安装Golang"
+          sudo apt install golang-go
+          echo "初始化环境完成!"
+
+      - name: 下载打卡程序
+        run: |
+          wget -O ./datafill_new_linux_amd64 https://github.com/HBFUer/dataFill_new/releases/download/1.01/datafill_new_linux_amd64
+          chmod +x ./datafill_new_linux_amd64
+
+      - name: 进行自动打卡
+        run: ./datafill_new_linux_amd64 -oaUsername=${{ secrets.oaUsername }} -oaPassword=${{ secrets.oaPassword }} -addressGA=${{ secrets.address }} -prove=${{ secrets.prove }}
+
+      - name: 上传运行截图
+        uses: actions/upload-artifact@v3
+        with:
+          name: 运行截图
+          path: ./Screenshots/
+

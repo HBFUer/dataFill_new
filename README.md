@@ -1,7 +1,10 @@
 # dataFill_new
+
 河北金融学院每日自动健康打卡（新版）
 
 适配了最新微信小程序打卡方式，适用于自 2022-06-22 后的每日健康打卡
+
+> 程序作者的每日自动打卡程序的运行情况： [![每日健康打卡(UbuntuRunner)](https://github.com/luckykeeper/HBFUDataFill_new/actions/workflows/dailyFill(Ubuntu).yml/badge.svg)](https://github.com/luckykeeper/HBFUDataFill_new/actions/workflows/dailyFill(Ubuntu).yml)
 
 ## 运行截图
 
@@ -11,7 +14,7 @@
 
 <details>   <summary>oaLoginPage.png OA 登录页截图</summary>   <p><img src=./images/oaLoginPage.png/></p>    <span>OA 登录页截图</span></details>
 
-<details>   <summary>oaLogined.png 健康打卡页截图</summary>   <p><img src=./images/oaLogined.png/></p>    <span>健康打卡页截图</span></details>
+<details>   <summary>oaLogined.png 健康打卡页截图（打卡前截图）</summary>   <p><img src=./images/oaLogined.png/></p>    <span>健康打卡页截图（打卡前截图）</span></details>
 
 运行结果会是以下情况之一：
 
@@ -31,12 +34,17 @@
 
 > 使用这种方式，你在设定好之后每日即可自动打卡，不需要自己准备设备，不需要人工干预！
 
-> 请在理解单文件运行方式的前提下使用 GitHub Action 
+> **请务必在理解单文件运行方式的前提下使用 GitHub Action** 
 
 1. 首先你需要拥有一个 GitHub 账号，如果没有，请点击[这里](https://github.com/)然后点击右上角的 `Sign up` 注册一个，可以看这篇教程：https://blog.csdn.net/KKKKKKKMAx/article/details/125394719
 2. **fork** 本项目到自己的仓库，**fork** 按钮在这个页面的右上角**（边上还有一个 `Star` 的按钮，希望你一并点亮支持一下作者）**，如果不会的话，参考：https://blog.csdn.net/weixin_52634719/article/details/122504390
 3. 点击Actions选项卡，点击`I understand my workflows, go ahead and enable them`
-4. 在 **fork 下来的自己的仓库中**到 **Settings-Secrets** 设置密钥（把密码等信息放在这里别人是看不到的），如图设置四个 `Repository secrets` ，如果不会的话，请参考：https://zhuanlan.zhihu.com/p/516839666 中“设置Github secrets 环境变量”一节
+
+> 2022年9月8日更新：
+>
+> 现在 Action 里面的 Workflows 有两个，分别叫**每日健康打卡(UbuntuRunner)** 和**每日健康打卡(WindowsRunner)** ，如果没有特殊需求，请`只启用 UbuntuRunner 并不启用 WindowsRunner 的 Workflow` ，关于启用和禁用方法以及两者的区别，请参考 [FAQ](#FAQ)
+
+1. 在 **fork 下来的自己的仓库中**到 **Settings-Secrets** 设置密钥（把密码等信息放在这里别人是看不到的），如图设置四个 `Repository secrets` ，如果不会的话，请参考：https://zhuanlan.zhihu.com/p/516839666 中“设置Github secrets 环境变量”一节
 
 ![](./images/secretSetting.png)
 
@@ -50,8 +58,14 @@
 | prove      | 是否持有核酸证明是（true）否（false）                        | true                        |                                                            |
 
 > tips:使用 GitHub Action 时，`prove` 是必选参数
+>
+> **address 请务必参照单文件运行方式的格式严格填写地址后再转 URL 编码，保证数据提交符合格式**
+>
+> 还是单文件中的例子，`张三` 居住在 `河北省保定市莲池区下北泽街道3188号河北金融学院` ，则你在 URL 编码网站提交的中文应当是：`河北省/保定市/莲池区/下北泽街道/3188号河北金融学院`，你在 `Repository secrets` 填写的 `address` 值应当是：`%E6%B2%B3%E5%8C%97%E7%9C%81/%E4%BF%9D%E5%AE%9A%E5%B8%82/%E8%8E%B2%E6%B1%A0%E5%8C%BA/%E4%B8%8B%E5%8C%97%E6%B3%BD%E8%A1%97%E9%81%93/3188%E5%8F%B7%E6%B2%B3%E5%8C%97%E9%87%91%E8%9E%8D%E5%AD%A6%E9%99%A2`
+>
+> **提醒：**所有信息请务必按照实际情况及时更新，保证提交的数据符合个人真实情况，如果不需要每日提交时也可以考虑暂时关闭定时任务（disable workflow），参考 [FAQ](#FAQ)
 
-完成，程序将在北京时间（UTC+8）的16时07分进行自动打卡操作，如果需要修改这个时间，请修改`./github/workflows/dailyFill.yml` 文件中的 `cron` 字段
+完成，程序将在北京时间（UTC+8）的**14时11分**进行自动打卡操作，如果需要修改这个时间，请修改`./github/workflows/dailyFill.yml` 文件中的 `cron` 字段
 
 > tips:使用 GitHub Action 时，根据当时的排队情况，程序运行的时间可能会稍有延迟（一般在半个小时以内），所以可能在你设定时间之后的一段时间才能完成打卡
 
@@ -107,9 +121,41 @@
 
 1. 使用 GitHub Action 运行，有什么办法可以暂停每日运行？
 
-> A:你可以在 Action 里禁用掉这个 Workflow ，选择名为“每日健康打卡” 的 Workflow ，然后点击 Disable ，需要运行的时候在 Enable ，如果 fork 之后没有正常按时运行，也请检查这里的情况
+> A:你可以在 Action 里禁用掉这个 Workflow ，选择名为“每日健康打卡（UbuntuRunner）” 的 Workflow ，然后点击 Disable ，需要运行的时候在 Enable ，如果 fork 之后没有正常按时运行，也请检查这里的情况
 >
 > ![](./images/disableAction.png)
+
+2. 使用 GitHub Action 时， Windows Runner 和 Ubuntu Runner 选择哪个？
+
+>A: 一句话 Answer：没有特殊需求就选 Ubuntu Runner ，不推荐 Windows Runner
+>
+>详细解答：使用 GitHub Action 时，程序需要基于一个操作系统（OS）来运行，目前我们分别做了一套 Windows 系统的流程和一套 Ubuntu 系统的流程，**均可以正常完成打卡流程，基本上没有区别**
+>
+>不推荐 Windows Runner 的原因在是 GitHub Action 上，微软提供的 Windows 机器比较少，使用定时触发时，排队时间会比较长（Windows Runner 一般排队时间在半个小时左右，举例来说，你定时在北京时间下午2点，实际程序可能在2点30才能开始打卡），而 Ubuntu 的机器比较多，排队时间也就短了很多，所以强烈推荐使用 Ubuntu Runner ，能够较好保证定时运行的准时性
+>
+>不过 Ubuntu Runner 上传的截图里面中文会乱码，不过没有什么影响，如果你还是很在意的话，可以考虑使用 Windows Runner
+
+3.如何启用  Windows Runner？
+
+> A:首先进入**你 fork 下来的仓库的** `Actions` 页面，正常设置完成后应当如下图所示：
+>
+> ![](./images/enableWindowsRunner0.png)
+>
+> 此时关注 Workflows 下面两个选项卡的图标（Windows Runner）是叹号表示没有启用，反之此时（Ubuntu Runner）是启用的
+>
+> 在（Ubuntu Runner）的选项卡下，点击右边的菜单，把他 Disabled 掉
+>
+> ![](./images/enableWindowsRunner1.png)
+>
+> 在（Windows Runner）选项卡下，点击 Enable workflow
+>
+> 以上操作完成后，你应该发现两个 Runner 左边的图标顺序反过来了，就对了
+>
+> **为了防止不小心同时启用两个 Workflow 的情况，我们把 Windows Runner 的定时关掉了**，只保留了手动触发，所以你还需要把 Windows Runner 定时运行手动开一下，所以还需要进行以下操作：
+>
+> 进行如图所示操作
+>
+> ![](./images/enableWindowsRunner2.png)
 
 ## 更新历史
 
