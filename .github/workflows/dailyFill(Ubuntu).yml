@@ -1,4 +1,4 @@
-# 河北金融学院 OA 疫情数据自动填报（新版-适配微信小程序版本） GitHub Action 版（Runner：Windows）
+# 河北金融学院 OA 疫情数据自动填报（新版-适配微信小程序版本） GitHub Action 版（Runner：Ubuntu）
 # Powered By Luckykeeper <luckykeeper@luckykeeper.site | https://luckykeeper.site> 2022/09/07
 
 name: 每日健康打卡(UbuntuRunner)
@@ -6,7 +6,7 @@ name: 每日健康打卡(UbuntuRunner)
 on: 
   # 定时运行
   schedule:
-    - cron:  '11 2 * * *' # 打卡程序运行时间（UTC时间），默认 '11 2 * * *' 即北京时间每天下午2点11分运行，建议设置在非整点避开高峰期避免排队时间过长问题
+    - cron:  '11 6 * * *' # 打卡程序运行时间（UTC时间），默认 '11 6 * * *' 即北京时间每天下午2点11分运行，建议设置在非整点避开高峰期避免排队时间过长问题
 
   # 手动运行
   workflow_dispatch:
