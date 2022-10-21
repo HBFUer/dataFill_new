@@ -1,0 +1,38 @@
+---
+kind: pipeline # 定义对象类型:pipeline
+type: docker # 定义流水线类型:docker
+name: 每日健康打卡(UbuntuRunner) # 定义流水线名称
+
+steps:
+- name: 一键打卡
+  environment:
+    OAUSERNAME:
+      from_secret: oaUsername
+    OAPASSWORD:
+      from_secret: oaPassword
+    ADDRESS:
+      from_secret: address
+    PROVE:
+      from_secret: prove
+
+  image: ubuntu:20.04
+  commands:
+  - echo "开始初始化环境"
+  - apt update
+  - apt upgrade -y
+  - apt install -y libappindicator1 fonts-liberation wget
+  - apt install -y libasound2 libatk-bridge2.0-0 libatspi2.0-0 libcurl3-gnutls libcurl3-nss libcurl4 libdrm2 libgbm1 libgtk-3-0 libnspr4 libnss3 libwayland-client0 libxkbcommon0 xdg-utils
+  
+  - echo "安装Chrome浏览器"
+  - wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+  - dpkg -i google-chrome*.deb
+  - echo "安装Golang"
+  - apt install -y golang-go
+  - echo "初始化环境完成!"
+
+  - echo "下载打卡程序"
+  - wget -O ./datafill_new_linux_amd64 https://github.com/HBFUer/dataFill_new/releases/download/1.01/datafill_new_linux_amd64
+  - chmod +x ./datafill_new_linux_amd64
+
+  - echo "进行自动打卡"
+  - ./datafill_new_linux_amd64 -oaUsername=$OAUSERNAME -oaPassword=$OAPASSWORD -address=$ADDRESS -prove=$PROVE

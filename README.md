@@ -1,10 +1,12 @@
 # dataFill_new
 
+<details>   <summary>【2022/10/19-置顶】近期GitHub Action 无法完成打卡的情况说明</summary>   <p>近期（2022/10/19开始）发现 GitHub Action 运行方式在 POST QueryListPage 的时候会出现超时情况，这可能是 GitHub 从国外线路访问国内的问题或是 OA 对境外访问进行了阻断，目前的解决方式有：</p><p><li>使用本地版结合定时运行实现自动打卡</li><li>使用境内的 CI/CD 服务（作者目前选择的是这个方式，自建 Gitea + drone 来解决这个问题，你可以参考项目根目录下.drone.yml文件完成pipeline的设置）</li></p></details>
+
 河北金融学院每日自动健康打卡（新版）
 
 适配了最新微信小程序打卡方式，适用于自 2022-06-22 后的每日健康打卡
 
-> 程序作者的每日自动打卡程序的运行情况： [![每日健康打卡(UbuntuRunner)](https://github.com/luckykeeper/HBFUDataFill_new/actions/workflows/dailyFill(Ubuntu).yml/badge.svg)](https://github.com/luckykeeper/HBFUDataFill_new/actions/workflows/dailyFill(Ubuntu).yml)
+> 程序作者的每日自动打卡程序的运行情况： [![Build Status](https://cicd.luckykeeper.site:44443/api/badges/LuckySoft/dataFill_new/status.svg?ref=refs/heads/main)](https://cicd.luckykeeper.site:44443/LuckySoft/dataFill_new)
 
 ## 运行截图
 
