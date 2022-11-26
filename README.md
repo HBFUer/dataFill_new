@@ -1,6 +1,6 @@
 # dataFill_new
 
-<details>   <summary>【2022/10/19-置顶】近期GitHub Action 无法完成打卡的情况说明</summary>   <p>近期（2022/10/19开始）发现 GitHub Action 运行方式在 POST QueryListPage 的时候会出现超时情况，这可能是 GitHub 从国外线路访问国内的问题或是 OA 对境外访问进行了阻断，目前的解决方式有：</p><p><li>使用本地版结合定时运行实现自动打卡</li><li>使用境内的 CI/CD 服务（作者目前选择的是这个方式，自建 Gitea + drone 来解决这个问题，你可以参考项目根目录下.drone.yml文件完成pipeline的设置）</li></p></details>
+<details>   <summary>【2022/10/19-置顶】近期GitHub Action 无法完成打卡的情况说明</summary>   <p>近期（2022/10/19开始）发现 GitHub Action 运行方式在 POST QueryListPage 的时候会出现超时情况，这可能是 GitHub 从国外线路访问国内的问题或是 OA 对境外访问进行了阻断，目前的解决方式有：</p><p><li>使用本地版结合定时运行实现自动打卡</li><li>使用境内的 CI/CD 服务（作者目前选择的是这个方式，自建 Gitea + drone 来解决这个问题，你可以参考项目根目录下 .drone.yml 文件完成 pipeline 的设置）</li></br>据观察，此现象目前已缓解，仍然推荐优先使用 Github Action ，以上两种方式可作为备用选项</p></details>
 
 河北金融学院每日自动健康打卡（新版）
 
