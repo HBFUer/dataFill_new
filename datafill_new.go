@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -19,69 +18,251 @@ import (
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
 	"github.com/chromedp/chromedp/kb"
-	strftime "github.com/jehiah/go-strftime"
+	"github.com/jehiah/go-strftime"
 	"github.com/tidwall/gjson"
+	"github.com/urfave/cli/v2"
 )
 
 var (
-	oaUsername string // OA 账号
-	oaPassword string // OA 密码
-	address    string // 详细地址
-	prove      bool   // 核酸检测证明，有填 true ，没有填 false
-	addressGA  string // GitHub Action 用地址，URL编码
+	oaUsername  string // OA 账号
+	oaPassword  string // OA 密码
+	address     string // 详细地址
+	prove       bool   // 核酸检测证明，有填 true ，没有填 false
+	addressGA   string // GitHub Action 用地址，URL编码
+	catchUpDate string // 补打卡日期
+	checkDate   string // 程序执行打卡日期
+	proveStr    string
 
-	addressGAToStr, HaveProve, AuthorizationCodeStr string
+	HaveProve, AuthorizationCodeStr string
+
+	statusCode int  // 运行状态码
+	pushBool   bool // 是否调用 OA 进行微信推送
 )
 
-func init() {
-	flag.StringVar(&oaUsername, "oaUsername", "", "河北金融学院OA系统的用户名(学工号)")
-	flag.StringVar(&oaPassword, "oaPassword", "", "河北金融学院OA系统的密码")
-	flag.StringVar(&address, "address", "", "当前的居住地址(省/市/区/街道/详细地址),省市参数可以在 https://oa.hbfu.edu.cn/datafill/collect/usertask 获取")
-	flag.BoolVar(&prove, "prove", false, "是否持有核酸证明,可选(true|false),true=>有,false=>无")
-	flag.StringVar(&addressGA, "addressGA", "", "当前的居住地址Url编码（仅供GitHub Action使用）")
-	flag.Parse()
-	addressGAToStr, _ = url.QueryUnescape(addressGA)
+// 程序入口
+func main() {
+	dataFillCLI()
 }
 
-func main() {
+// CLI
+func dataFillCLI() {
+	dataFill := &cli.App{
+		Name: "HBFUDataFill_new",
+		Usage: "河北金融学院自动每日健康打卡（新版）Ver1.10 Build20221227" +
+			"\nPowered By Luckykeeper <luckykeeper@luckykeeper.site | https://luckykeeper.site>" +
+			"\n————————————————————————————————————————",
+		Version: "1.1.0_build20221227",
 
-	fmt.Println("河北金融学院自动每日健康打卡（新版）Ver1.01 Build20220906")
-	fmt.Println("Powered By Luckykeeper <luckykeeper@luckykeeper.site | https://luckykeeper.site>")
-	fmt.Println("GitHub:https://github.com/HBFUer/dataFill_new")
-	fmt.Println("_____________________________________________")
-	if oaUsername == "" || oaPassword == "" { // 校验：OA用户名密码必须填写
-		usage()
-	} else if addressGA == "" && address == "" { // 校验，两个地址不能都空
-		usage()
-	} else if addressGA != "" && address != "" { // 校验，两个地址不能都填
-		usage()
-	} else {
-		if addressGA != "" {
-			address = addressGAToStr
-		}
-		fmt.Println("本程序将自动完成每日健康打卡，你需要对你上报的数据负责！程序仅负责调用接口上报数据！")
-		fmt.Println("程序仅供学习探讨Go语言编程，对使用本程序造成的一切后果作者均不负责！")
-		fmt.Println("程序不存储用户账户密码，请妥善保管好相关信息！")
-		fmt.Println("程序不对接口变动后可能产生的异常负责，请关注接口信息！")
-		fmt.Println("运行程序则代表已知晓并同意以上规则！")
-		createDir("./Screenshots")
-		getAuthAndDataFill()
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:        "oaUsername",
+				Aliases:     []string{"oU"},
+				Usage:       "OA 平台的账号（学工号）-（必选参数）",
+				Destination: &oaUsername,
+			},
+			&cli.StringFlag{
+				Name:        "oaPassword",
+				Aliases:     []string{"oP"},
+				Usage:       "OA 平台的密码-（必选参数）",
+				Destination: &oaPassword,
+			},
+			&cli.StringFlag{
+				Name:        "address",
+				Aliases:     []string{"ad"},
+				Usage:       "当前居住地址【限本地运行使用】-（必选参数，和`addressGA`二选一）",
+				Value:       "",
+				Destination: &address,
+			},
+			&cli.StringFlag{
+				Name:        "addressGA",
+				Aliases:     []string{"adG"},
+				Usage:       "当前居住地址（URL编码）【限云端运行使用】-（必选参数，和`address`二选一）",
+				Value:       "",
+				Destination: &addressGA,
+			},
+			&cli.StringFlag{
+				Name:    "prove",
+				Aliases: []string{"p"},
+				Value:   "false",
+				Usage: "是否持有核酸检测证明-（可选参数，默认值为“false”【否，未持有核酸检测证明】）\n" +
+					"可选值：`true`或`false`",
+				Destination: &proveStr,
+			},
+			&cli.StringFlag{
+				Name:        "catchUp",
+				Aliases:     []string{"cU"},
+				Usage:       "补打之前某天的打卡-（可选参数，示例“22-12-27”）",
+				Destination: &catchUpDate,
+			},
+			&cli.BoolFlag{
+				Name:        "EnableOA-WXPush",
+				Aliases:     []string{"OAPush"},
+				Usage:       "使用 OA 对结果进行微信推送-（可选参数，带此参数开启推送，不带此参数则不开启）",
+				Value:       false,
+				Destination: &pushBool,
+			},
+		},
+
+		Commands: []*cli.Command{
+			{
+				Name:    "runLocal",
+				Aliases: []string{"rl"},
+				Usage:   "在本地启动服务时使用，输入参数依次为 OA 账号 、 OA 密码 、详细地址、核酸检测证明状态",
+				Action: func(cCtx *cli.Context) error {
+					if oaUsername == "" {
+						log.Fatalln("必须输入 OA 账号，请检查参数")
+					} else if oaPassword == "" {
+						log.Fatalln("必须输入 OA 密码，请检查参数")
+					} else if address == "" {
+						log.Fatalln("必须输入居住地址，请检查参数")
+					} else if addressGA != "" {
+						log.Fatalln("本地运行模式不接受 `addressGA` 参数，请检查参数")
+					}
+					if proveStr == "false" || proveStr == "" {
+						prove = false
+					} else if proveStr == "true" {
+						prove = true
+					} else {
+						log.Fatalln("prove 参数错误，请检查参数")
+					}
+					dataFileRunLocal(oaUsername, oaPassword, address, prove)
+					return nil
+				},
+			},
+			{
+				Name:    "runCloud",
+				Aliases: []string{"rc"},
+				Usage:   "在云端启动服务时使用，输入参数依次为 OA 账号 、 OA 密码 、详细地址（URL 编码）、核酸检测证明状态",
+				Action: func(cCtx *cli.Context) error {
+					if oaUsername == "" {
+						log.Fatalln("必须输入 OA 账号，请检查参数")
+					} else if oaPassword == "" {
+						log.Fatalln("必须输入 OA 密码，请检查参数")
+					} else if addressGA == "" {
+						log.Fatalln("必须输入居住地址（URL编码），请检查参数")
+					} else if address != "" {
+						log.Fatalln("云端运行模式不接受 `address` 参数，请检查参数")
+					}
+					dataFileRunCloud(oaUsername, oaPassword, addressGA, prove)
+					return nil
+				},
+			},
+		},
+	}
+
+	if err := dataFill.Run(os.Args); err != nil {
+		log.Fatal(err)
 	}
 }
 
-// Usage
-func usage() {
-	fmt.Println("Usage:")
-	fmt.Println("-oaUsername (必选参数)河北金融学院OA系统的用户名(学工号)")
-	fmt.Println("-oaPassword (必选参数)河北金融学院OA系统的密码")
-	fmt.Println("-address (必选参数，和 addressGA 必选其中一个)当前的居住地址(省/市/区/街道/详细地址),省市参数可以在 https://oa.hbfu.edu.cn/datafill/collect/usertask 获取")
-	fmt.Println("-addressGA (必选参数，和 address 必选其中一个)当前的居住地址Url编码（仅供GitHub Action使用）")
-	fmt.Println("-prove (可选参数)是否持有核酸证明,可选(true|false),true=>有,false=>无。默认：无")
+// 本地运行
+func dataFileRunLocal(oaUsername, oaPassword, address string, prove bool) {
+	dataFillProcess()
+}
+
+// 云端运行
+func dataFileRunCloud(oaUsername, oaPassword, addressGA string, prove bool) {
+	addressGAToStr, err := url.QueryUnescape(addressGA)
+	if err != nil {
+		log.Fatalln("URL 编码格式居住地址解析失败，请检查输入参数")
+	}
+	address = addressGAToStr
+	dataFillProcess()
+}
+
+// 打卡流程入口
+func dataFillProcess() {
+	fmt.Println("河北金融学院自动每日健康打卡（新版）Ver1.10 Build20221227")
+	fmt.Println("Powered By Luckykeeper <luckykeeper@luckykeeper.site | https://luckykeeper.site>")
+	fmt.Println("GitHub:https://github.com/HBFUer/dataFill_new")
+	fmt.Println("_____________________________________________")
+	fmt.Println("本程序将自动完成每日健康打卡，你需要对你上报的数据负责！程序仅负责调用接口上报数据！")
+	fmt.Println("程序仅供学习探讨 Go 语言编程，对使用本程序造成的一切后果作者均不负责！")
+	fmt.Println("程序不存储用户账户密码，请妥善保管好相关信息！")
+	fmt.Println("程序不对接口变动后可能产生的异常负责，请关注接口信息！")
+	fmt.Println("运行程序则代表已知晓并同意以上规则！")
+	createDir("./Screenshots")
+	retryTime := 0 // 重试计数
+	getAuthAndDataFill()
+	for retryTime <= 3 {
+		if statusCode != 200 && retryTime <= 3 {
+			time.Sleep(120 * time.Second)
+			log.Println("检测到打卡任务可能超时，重试中")
+			retryTime++
+			log.Println("当前第", retryTime, "次重试")
+			getAuthAndDataFill()
+		} else if statusCode != 200 && retryTime > 3 {
+			if pushBool {
+				pushResultThroughOA("每日健康打卡失败提醒")
+			}
+			log.Fatalln("重试次数过多，已放弃重试")
+		} else if statusCode == 200 {
+			if pushBool {
+				pushResultThroughOA("每日健康打卡成功提醒")
+			}
+			log.Println("打卡流程顺利完成")
+			os.Exit(0)
+		}
+	}
+}
+
+// OA 短消息发送接口数据
+type OANotification struct {
+	OANotificationTitle        string          `json:"title"`        // 标题
+	OANotificationContent      string          `json:"content"`      // 内容
+	OANotificationIsSent       int             `json:"isSent"`       // 发送状态（固定为1）
+	OANotificationType         int             `json:"type"`         // 内容类型（固定为0）
+	OANotificationReceiverList []receiverAlone `json:"receiverList"` // 接收列表
+}
+
+type receiverAlone struct {
+	Receiver string `json:"receiver"`
+}
+
+// 结果推送微信（OA通道）
+func pushResultThroughOA(title string) {
+	notificationPageUrl := "https://oa.hbfu.edu.cn/backstage/oldmessage/insert"
+	notificationPageUrlContentType := "application/json"
+
+	notificationReceiverAlone := receiverAlone{
+		Receiver: oaUsername,
+	}
+	var notificationReceiverGroup []receiverAlone
+	notificationReceiverGroup = append(notificationReceiverGroup, notificationReceiverAlone)
+
+	// 注意赋值方式，否则会报空指针
+	notificationContent := OANotification{OANotificationTitle: title, OANotificationContent: "<p>打卡日期：" + checkDate + "</p>" + "<br>" + "<p>Powered By Luckykeeper &lt;luckykeeper@luckykeeper.site | https://luckykeeper.site&gt;</p>",
+		OANotificationIsSent: 1, OANotificationType: 0, OANotificationReceiverList: notificationReceiverGroup}
+	notificationData, _ := json.Marshal(notificationContent)
+	notificationParam := bytes.NewBuffer(notificationData)
+
+	//构建http请求
+	client := &http.Client{}
+	request, err := http.NewRequest("POST", notificationPageUrl, notificationParam)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 添加 Header
+	request.Header.Add("Authorization", AuthorizationCodeStr)
+	request.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36")
+	request.Header.Add("Content-Type", notificationPageUrlContentType)
+
+	requests, err := client.Do(request)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer requests.Body.Close()
+	returnBody, err := io.ReadAll(requests.Body)
+	log.Println("OA 到微信的推送消息发送状态为：", string(returnBody))
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // 获取 AuthorizationCode
 func getAuthAndDataFill() {
-
+	statusCode = 102
 	var pic1 []byte // debug 使用
 	var pic0, pic2 []byte
 	// create context
@@ -89,9 +270,11 @@ func getAuthAndDataFill() {
 		chromedp.Flag("headless", true)) // debug(false)|prod(true)
 	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), options...)
 	defer cancel()
-	ctx, cancel := chromedp.NewContext(
+	ctx, _ := chromedp.NewContext(
 		allocCtx,
 	)
+	// 添加超时时间
+	ctx, cancel = context.WithTimeout(ctx, 120*time.Second)
 	defer cancel()
 
 	getCodeAndDataFill(ctx)
@@ -177,6 +360,7 @@ func getCodeAndDataFill(ctx context.Context) {
 				AuthorizationCodeStr = strings.Split(authorizationCodeStrSplit, "\",\"Content-Type\"")[0]
 				log.Println("登录流程完成!")
 				log.Println("AuthorizationCode 获取完成!")
+				statusCode = 100
 				// log.Println("AuthorizationCode:", AuthorizationCodeStr) // 仅调试使用，生产环境务必注释掉本行，防止认证 Code 泄露！
 				dailyDataFill(AuthorizationCodeStr)
 			}
@@ -233,9 +417,19 @@ type pageParam struct {
 func queryListForPage(authorizationCode string, nowdate string) (formID string) {
 	queryListForPageUrl := "https://oa.hbfu.edu.cn/backstage/mars-datafill/depttask/queryListForPage"
 	queryListForPageUrlContentType := "application/json"
-	queryParamName := pageParam{
-		Name: nowdate,
-		// Name: "22-08-29", // 调试用，指定日期
+	var queryParamName pageParam
+	if catchUpDate == "" {
+		queryParamName = pageParam{
+			Name: nowdate,
+			// Name: "22-08-29", // 调试用，指定日期
+		}
+		checkDate = nowdate
+	} else {
+		log.Println("检测到补打卡要求，将尝试完成" + catchUpDate + "的补打卡")
+		queryParamName = pageParam{
+			Name: catchUpDate,
+		}
+		checkDate = catchUpDate
 	}
 	// 注意赋值方式，否则会报空指针
 	queryContent := QueryList{PageNum: 1, PageSize: 10, PageParam: &queryParamName}
@@ -274,9 +468,9 @@ func queryListForPage(authorizationCode string, nowdate string) (formID string) 
 	log.Println("填写状态:", fillStatus)
 	// log.Println("formID:", formID) // 仅调试使用，生产环境务必注释掉本行，防止别人拿到表格ID进行填写！
 	if fillStatus.Int() != 0 {
-		log.Panic("当日数据已经上报，无需再次提交！")
+		log.Fatalln("当日数据已经上报，无需再次提交！")
 	} else if formID == "" {
-		log.Panic("无法找到当日表格 ID ,检查当日打卡是否发放!")
+		log.Fatalln("无法找到当日表格 ID ,检查当日打卡是否发放!")
 	}
 	return formID
 }
@@ -337,6 +531,7 @@ func dailyFill(authorizationCode string, formID string, prove bool, address stri
 		log.Fatal(err)
 	}
 	log.Println("提交结果:", string(returnBody))
+	statusCode = 200
 
 }
 

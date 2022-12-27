@@ -1,6 +1,8 @@
 # dataFill_new
 
-【置顶】目前程序版本已经更新到 1.1.0 ，对程序进行了较大的重构，使用方法与之前的版本略有不同，[点这里查看 1.1.0 之前版本的旧文档](./README_ver1.0.1.md)
+**这是 1.1.0 （不含）之前版本的旧文档，最新版本文档请[点这里](./README.md)**
+
+<details>   <summary>【2022/10/19-置顶】近期GitHub Action 无法完成打卡的情况说明</summary>   <p>近期（2022/10/19开始）发现 GitHub Action 运行方式在 POST QueryListPage 的时候会出现超时情况，这可能是 GitHub 从国外线路访问国内的问题或是 OA 对境外访问进行了阻断，目前的解决方式有：</p><p><li>使用本地版结合定时运行实现自动打卡</li><li>使用境内的 CI/CD 服务（作者目前选择的是这个方式，自建 Gitea + drone 来解决这个问题，你可以参考项目根目录下 .drone.yml 文件完成 pipeline 的设置）</li></br>据观察，此现象目前已缓解，仍然推荐优先使用 Github Action ，以上两种方式可作为备用选项</p></details>
 
 河北金融学院每日自动健康打卡（新版）
 
@@ -50,21 +52,18 @@
 
 ![](./images/secretSetting.png)
 
-字段说明（具体请下载单文件版本不带参数运行或带`-h`或带`--help`参数查看）：
+字段说明：
 
-| 字段（“/”后是缩写）    | 说明                                                         | 举例                                               | 备注                                                       |
-| ---------------------- | ------------------------------------------------------------ | -------------------------------------------------- | ---------------------------------------------------------- |
-| oaUsername/oU          | 河北金融学院OA用户名（也就是学工号）                         |                                                    | (GitHub Action)填写时复制本字段，会自动转大写，下同        |
-| oaPassword/oP          | 河北金融学院OA密码                                           | 123456                                             |                                                            |
-| address/ad             | 自己的居住地址（本地运行填写此参数）                         | 河北省/保定市/莲池区/下北泽街道/3188号河北金融学院 |                                                            |
-| addressGA/adG          | 自己的居住地址，请填写URL编码（encodeURL编码）的地址，直接填写中文会导致上传的地址数据乱码 | %E4%B8%8B%E5%8C%97%E6%B3%BD                        | URL在线编码网站参考：https://www.bejson.com/enc/urlencode/ |
-| prove/p                | 是否持有核酸证明是（true）否（false）                        | true                                               | 可选参数                                                   |
-| catchUp/cU             | 补打某日的卡                                                 | 22-12-27                                           | 可选参数，不带此参数则打当日的卡                           |
-| EnableOA-WXPush/OAPush | **后面不可带值**，是否启用“河北金融学院信息服务”微信公众号信息推送 | --OAPush                                           | 可选参数                                                   |
+| 字段       | 说明                                                         | 举例                        | 备注                                                       |
+| ---------- | ------------------------------------------------------------ | --------------------------- | ---------------------------------------------------------- |
+| oaUsername | 河北金融学院OA用户名（也就是学工号）                         |                             | 填写时复制本字段，会自动转大写，下同                       |
+| oaPassword | 河北金融学院OA密码                                           | 123456                      |                                                            |
+| address    | 自己的居住地址，请填写URL编码（encodeURL编码）的地址，直接填写中文会导致上传的地址数据乱码 | %E4%B8%8B%E5%8C%97%E6%B3%BD | URL在线编码网站参考：https://www.bejson.com/enc/urlencode/ |
+| prove      | 是否持有核酸证明是（true）否（false）                        | true                        |                                                            |
 
-> tips:使用 GitHub Action 时，`prove` ~~是必选参数~~，Ver 1.1.0 起为可选，默认值为 false
+> tips:使用 GitHub Action 时，`prove` 是必选参数
 >
-> **addressGA 请务必参照单文件运行方式的格式严格填写地址后再转 URL 编码，保证数据提交符合格式**
+> **address 请务必参照单文件运行方式的格式严格填写地址后再转 URL 编码，保证数据提交符合格式**
 >
 > 还是单文件中的例子，`张三` 居住在 `河北省保定市莲池区下北泽街道3188号河北金融学院` ，则你在 URL 编码网站提交的中文应当是：`河北省/保定市/莲池区/下北泽街道/3188号河北金融学院`，你在 `Repository secrets` 填写的 `address` 值应当是：`%E6%B2%B3%E5%8C%97%E7%9C%81/%E4%BF%9D%E5%AE%9A%E5%B8%82/%E8%8E%B2%E6%B1%A0%E5%8C%BA/%E4%B8%8B%E5%8C%97%E6%B3%BD%E8%A1%97%E9%81%93/3188%E5%8F%B7%E6%B2%B3%E5%8C%97%E9%87%91%E8%9E%8D%E5%AD%A6%E9%99%A2`
 >
@@ -88,49 +87,21 @@
 
 ![](./images/run0.png)
 
-比如你是法外狂徒`张三`，你使用`Windows`电脑，你的学号（或者是工号）是`114514`，你的[OA](https://oa.hbfu.edu.cn/backstage/cas/login)密码是`1919810`，你居住在`河北省保定市莲池区下北泽街道3188号河北金融学院`，拥有核酸检测证明，并且希望通过“河北金融学院信息服务”微信公众号获取当日打卡状态，那么你应当在程序目录下打开 PowerShell 或者 cmd，输入如下参数完成当日打卡
+比如你是法外狂徒`张三`，你使用`Windows`电脑，你的学号（或者是工号）是`114514`，你的[OA](https://oa.hbfu.edu.cn/backstage/cas/login)密码是`1919810`，你居住在`河北省保定市莲池区下北泽街道3188号河北金融学院`，拥有核酸检测证明，那么你应当在程序目录下打开 PowerShell 或者 cmd，输入如下参数完成当日打卡
 
 ```powershell
-.\datafill_new_windows_amd64.exe --oaUsername 114514 --oaPassword 1919810 --address 河北省/保定市/莲池区/下北泽街道/3188号河北金融学院 --prove true --EnableOA-WXPush runLocal
-```
-
-以上命令可以简写为
-
-```powershell
-.\datafill_new_windows_amd64.exe --oU 114514 --oP 1919810 --ad 河北省/保定市/莲池区/下北泽街道/3188号河北金融学院 --prove true --OAPush rl
+.\datafill_new_windows_amd64.exe -oaUsername=114514 -oaPassword=1919810 -address=河北省/保定市/莲池区/下北泽街道/3188号河北金融学院 -prove=true
 ```
 
 > tips:省/市/区/街道（乡）的具体填写请参考 https://oa.hbfu.edu.cn/datafill/collect/usertask 行政规划之间使用英文`/`分隔，不需要加空格
 
-如果`张三`没有核酸检测证明，并且不希望通过“河北金融学院信息服务”微信公众号获取当日打卡状态，还想补打2022年12月1日的卡，则输入
+如果`张三`没有核酸检测证明，则输入
 
 ```powershell
-.\datafill_new_windows_amd64.exe --oaUsername 114514 --oaPassword 1919810 --address 河北省/保定市/莲池区/下北泽街道/3188号河北金融学院 --prove false --catchUp 22-12-01 runLocal
-```
-
-以上命令可简写为
-
-```powershell
-.\datafill_new_windows_amd64.exe --oU 114514 --oP 1919810 --ad 河北省/保定市/莲池区/下北泽街道/3188号河北金融学院 --prove false --cU 22-12-01 rl
+.\datafill_new_windows_amd64.exe -oaUsername=114514 -oaPassword=1919810 -address=河北省/保定市/莲池区/下北泽街道/3188号河北金融学院 -prove=false
 ```
 
 > tips:此时 -prove 参数可以省略
-
-#### “河北金融学院信息服务”微信公众号信息推送(--EnableOA-WXPush/--OAPush)功能简介
-
-该功能自 ver1.1.0_build20221227 起提供，使用此功能，可以方便的了解自动打卡的状态（主要供云端运行使用）
-
-启用该功能，会增加以下输出：
-
-![终端输出](./images/oaPushCLI.png)
-
-微信会收到类似下图的信息：
-
-![微信推送](./images/oaPushWX.png)
-
-OA端会收到这样的信息：
-
-![OA短消息](./images/oaPushOA.png)
 
 ## 注意事项
 
@@ -195,10 +166,3 @@ OA端会收到这样的信息：
 ### 1.01
 
 - 尝试解决 GitHub Action Secret 的中文乱码问题
-
-### 1.10
-
-- 重构了 CLI
-- 添加了打卡失败自动重试功能，降低运行失败几率
-- 添加了补打卡功能，可以补打过去日期的打卡啦
-- 添加了通过“河北金融学院信息服务”微信公众号对打卡结果进行通知的功能（可选）
